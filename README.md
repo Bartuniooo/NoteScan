@@ -1,6 +1,6 @@
 # NoteScan
 
-NoteScan 
+
 ---
 
 ## 🚀 Features
