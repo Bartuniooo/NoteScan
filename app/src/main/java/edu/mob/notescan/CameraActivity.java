@@ -1,0 +1,243 @@
+package edu.mob.notescan;
+
+import static android.provider.Telephony.Mms.Part.FILENAME;
+
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.net.Uri;
+import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.gms.cast.framework.media.ImagePicker;
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.core.MatOfFloat;
+
+
+
+public class CameraActivity extends AppCompatActivity {
+
+    Button button_capture, button_copy;
+    private TextView textViewResult;
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_camera);
+
+        OpenCVLoader.initDebug();
+        button_capture = findViewById(R.id.button_capture);
+        button_copy = findViewById(R.id.button_copy);
+        textViewResult = findViewById(R.id.textViewResult);
+        ImageButton buttonBack = findViewById(R.id.buttonBack);
+        ImageButton buttonSave = findViewById(R.id.buttonSave);
+
+
+        Bitmap imageBitmap = getIntent().getParcelableExtra("imageBitmap");
+        // sprawdznie czy przeslano obraz
+        if (imageBitmap != null) {
+
+            recognizeTextFromImage(imageBitmap);
+        } else {
+            // jesli nie obraz sprawdz czy przesłan imagePath
+            String imagePath = getIntent().getStringExtra("imagePath");
+            if (imagePath != null) {
+                // ścieżka na Bitmape
+                Bitmap bitmapFromPath = BitmapFactory.decodeFile(imagePath);
+                if (bitmapFromPath != null) {
+                    recognizeTextFromImage(bitmapFromPath);
+                } else {
+                    Toast.makeText(this, "Nie udało się wczytać obrazu z podanej ścieżki.", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                // Jeśli ani Bitmap, ani imagePath nie są dostępne, wyświetl błąd
+                Toast.makeText(this, "Nie przesłano obrazu do przetwarzania.", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+
+
+        // Przycisk powrotu do ekranu głównego
+        buttonBack.setOnClickListener(v ->  finish());
+
+
+        // Przycisk do skopipowania tekstu po zakończonej obróbce
+        button_copy.setOnClickListener(v -> {
+            String textToCopy = textViewResult.getText().toString();
+            if (!textToCopy.isEmpty() && !textToCopy.equals("Wynik OCR pojawi się tutaj")) {
+                android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                android.content.ClipData clip = android.content.ClipData.newPlainText("OCR Text", textToCopy);
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(this, "Skopiowano tekst do schowka", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Brak tekstu do skopiowania", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+        // Przycisk do zapisu tekstu jak .txt w pamięci urządznia
+        buttonSave.setOnClickListener(v -> {
+            String textToSave = textViewResult.getText().toString();
+
+            if (!textToSave.isEmpty() && !textToSave.equals("Wynik OCR pojawi się tutaj")) {
+                saveTextToFile(textToSave);
+            } else {
+                Toast.makeText(this, "Brak tekstu do zapisania", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+        // Przycisk otwierający kamere
+        button_capture.setOnClickListener(v -> {
+            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
+        });
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            // Pobieranie obrazu z kamery
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            // Rozpocznij proces OCR
+            recognizeTextFromImageWithLLM(imageBitmap);
+        }
+    }
+
+
+    public void recognizeTextFromImage(Bitmap imageBitmap) {
+        // metoda do rozpoznania tekstu ze zdjęcia i wyswietlenia go w textViewResult
+
+//        Mat matImage = new Mat();
+//        Utils.bitmapToMat(imageBitmap, matImage);
+//
+//        // Konwersja obrazu do odcieni szarości
+//        Imgproc.cvtColor(matImage, matImage, Imgproc.COLOR_RGB2GRAY);
+//
+//        // Zwiększenie kontrastu - binaryzacja (thresholding)
+//        Imgproc.threshold(matImage, matImage, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+//
+//        // Usuwanie szumów - użycie filtru mediana
+//        Imgproc.medianBlur(matImage, matImage, 5);
+//
+//        // Przekształcenie Mat do Bitmapy, aby można było przekazać go do ML Kit
+//        Bitmap processedBitmap = Bitmap.createBitmap(matImage.cols(), matImage.rows(), Bitmap.Config.ARGB_8888);
+//        Utils.matToBitmap(matImage, processedBitmap);
+
+        InputImage image = InputImage.fromBitmap(imageBitmap, 0);
+
+        TextRecognizerOptions options = new TextRecognizerOptions.Builder().build();
+
+            // Utworzenie instancji rozpoznawacza tekstu z domyślnymi opcjami
+        TextRecognizer recognizer = TextRecognition.getClient(options);
+
+            // Rozpoczęcie procesu OCR
+        recognizer.process(image)
+                .addOnSuccessListener(result -> {
+                    String recognizedText = result.getText();  // Pobranie rozpoznanego tekstu
+                    textViewResult.setText(recognizedText);   // Wyświetlenie tekstu w TextView
+                })
+                .addOnFailureListener(e -> {
+                    textViewResult.setText("Błąd podczas rozpoznawania tekstu: " + e.getMessage());
+                });
+    }
+
+
+    // Metoda rozpoznaje tekst i koryguje go odpowiedzia z LLM przed wpisaniem w textViewResult
+    public void recognizeTextFromImageWithLLM(Bitmap imageBitmap) {
+
+        InputImage image = InputImage.fromBitmap(imageBitmap, 0);
+        TextRecognizerOptions options = new TextRecognizerOptions.Builder().build();
+
+        // Utworzenie instancji rozpoznawacza tekstu z domyślnymi opcjami
+        TextRecognizer recognizer = TextRecognition.getClient(options);
+
+        // Rozpoczęcie OCR
+        recognizer.process(image)
+                .addOnSuccessListener(result -> {
+                    String recognizedText = result.getText();  // Pobranie rozpoznanego tekstu
+                    //textViewResult.setText(recognizedText);
+
+                    if (!recognizedText.isEmpty()) {
+                        String prompt = "Popraw ten tekst z OCR na poprawny po polsku napisz tylko sam wynik twojej poprawy:\n" + recognizedText;
+                        new OpenAIRequestTask(this, new OpenAIRequestTask.OpenAIResponseCallback() {
+                            @Override
+                            public void onSuccess(String response) {
+                                textViewResult.setText(response);
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                // W przypadku błędu
+                                textViewResult.setText("Błąd podczas komunikacji z API: " + error);
+                            }
+                        }).execute(prompt);     // Przekazanie rozpoznanego tekstu jako prompt
+                    } else {
+                        textViewResult.setText("Brak rozpoznanego tekstu.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    textViewResult.setText("Błąd podczas rozpoznawania tekstu: " + e.getMessage());
+                });
+    }
+
+
+    // Metoda zapisująca tekst do pliku w pamięci wewnętrznej
+    private void saveTextToFile(String text) {
+        FileOutputStream fos = null;
+        BufferedWriter writer = null;
+        try {
+
+            fos = openFileOutput(FILENAME, MODE_PRIVATE);  // Zapisywanie w trybie lo
+            writer = new BufferedWriter(new OutputStreamWriter(fos));
+
+            // Zapisz tekst do pliku
+            writer.write(text);
+            writer.newLine();
+
+            Toast.makeText(this, "Tekst został zapisany w pliku", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Błąd zapisu do pliku", Toast.LENGTH_SHORT).show();
+        } finally {
+            try {
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+}
+
+
+
+
