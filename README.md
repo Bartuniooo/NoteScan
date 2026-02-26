@@ -1,3 +1,4 @@
+![NotoScan logo banner](logo_background.png)
 # 📝 NoteScan
 
 **NoteScan** is a mobile application designed to simplify the digitization of handwritten notes.  

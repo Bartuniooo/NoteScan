@@ -13,5 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
-C:\Users\bstac\Documents\Dokumenty Bartek\STUDIA\SEMESTR V\Systemy Mobilne\PROJKET_MOBILKI\NoteScan\app\src\main\res\values\secrets.xml
+app/src/main/res/values/secrets.xml
 
