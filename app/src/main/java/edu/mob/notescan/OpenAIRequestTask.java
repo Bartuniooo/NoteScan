@@ -24,12 +24,13 @@ public class OpenAIRequestTask extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... prompts) {
         String apiKey = context.getString(R.string.openai_api_key);
         OkHttpClient client = new OkHttpClient();
-
         JSONObject jsonObject = new JSONObject();
+
         try {
             jsonObject.put("model", "gpt-3.5-turbo");  // gpt-4o-mini
             jsonObject.put("prompt", prompts[0]);
             jsonObject.put("max_tokens", 1000);
+
         } catch (Exception e) {
             e.printStackTrace();
             return "Error creating JSON: " + e.getMessage();
@@ -48,6 +49,7 @@ public class OpenAIRequestTask extends AsyncTask<String, Void, String> {
 
         try {
             Response response = client.newCall(request).execute();
+
             if (response.isSuccessful()) {
                 return response.body() != null ? response.body().string() : null;
             } else {
@@ -62,6 +64,7 @@ public class OpenAIRequestTask extends AsyncTask<String, Void, String> {
     @Override
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
+
         if (result != null && !result.startsWith("Error")) {
             callback.onSuccess(result);
         } else {

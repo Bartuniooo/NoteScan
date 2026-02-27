@@ -33,7 +33,6 @@ import org.opencv.core.MatOfFloat;
 
 
 public class CameraActivity extends AppCompatActivity {
-
     Button button_capture, button_copy;
     private TextView textViewResult;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -51,15 +50,15 @@ public class CameraActivity extends AppCompatActivity {
         ImageButton buttonBack = findViewById(R.id.buttonBack);
         ImageButton buttonSave = findViewById(R.id.buttonSave);
 
-
         Bitmap imageBitmap = getIntent().getParcelableExtra("imageBitmap");
         // sprawdznie czy przeslano obraz
         if (imageBitmap != null) {
-
             recognizeTextFromImage(imageBitmap);
+
         } else {
             // jesli nie obraz sprawdz czy przesłan imagePath
             String imagePath = getIntent().getStringExtra("imagePath");
+
             if (imagePath != null) {
                 Bitmap bitmapFromPath = BitmapFactory.decodeFile(imagePath);
 
@@ -96,6 +95,7 @@ public class CameraActivity extends AppCompatActivity {
 
             if (!textToSave.isEmpty() && !textToSave.equals("Wynik OCR pojawi się tutaj")) {
                 saveTextToFile(textToSave);
+
             } else {
                 Toast.makeText(this, "Brak tekstu do zapisania", Toast.LENGTH_SHORT).show();
             }
@@ -125,22 +125,14 @@ public class CameraActivity extends AppCompatActivity {
 
     public void recognizeTextFromImage(Bitmap imageBitmap) {
         // metoda do rozpoznania tekstu ze zdjęcia i wyswietlenia go w textViewResult
+//        1. Capture → bitmapa
+//        2. Crop dokumentu (wykrycie krawędzi)
+//        3. Prostowanie perspektywy
+//        4. Konwersja do grayscale
+//        5. Usuwanie szumów
+//        6. Zwiększenie kontrastu / binaryzacja
+//        7. OCR
 
-//        Mat matImage = new Mat();
-//        Utils.bitmapToMat(imageBitmap, matImage);
-//
-//        // Konwersja obrazu do odcieni szarości
-//        Imgproc.cvtColor(matImage, matImage, Imgproc.COLOR_RGB2GRAY);
-//
-//        // Zwiększenie kontrastu - binaryzacja (thresholding)
-//        Imgproc.threshold(matImage, matImage, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
-//
-//        // Usuwanie szumów - użycie filtru mediana
-//        Imgproc.medianBlur(matImage, matImage, 5);
-//
-//        // Przekształcenie Mat do Bitmapy, aby można było przekazać go do ML Kit
-//        Bitmap processedBitmap = Bitmap.createBitmap(matImage.cols(), matImage.rows(), Bitmap.Config.ARGB_8888);
-//        Utils.matToBitmap(matImage, processedBitmap);
 
         InputImage image = InputImage.fromBitmap(imageBitmap, 0);
 
@@ -163,7 +155,6 @@ public class CameraActivity extends AppCompatActivity {
 
     // Metoda rozpoznaje tekst i koryguje go odpowiedzia z LLM przed wpisaniem w textViewResult
     public void recognizeTextFromImageWithLLM(Bitmap imageBitmap) {
-
         InputImage image = InputImage.fromBitmap(imageBitmap, 0);
         TextRecognizerOptions options = new TextRecognizerOptions.Builder().build();
 
@@ -204,16 +195,14 @@ public class CameraActivity extends AppCompatActivity {
     private void saveTextToFile(String text) {
         FileOutputStream fos = null;
         BufferedWriter writer = null;
-        try {
 
+        try {
             fos = openFileOutput(FILENAME, MODE_PRIVATE);  // Zapisywanie w trybie lo
             writer = new BufferedWriter(new OutputStreamWriter(fos));
-
-            // Zapisz tekst do pliku
             writer.write(text);
             writer.newLine();
-
             Toast.makeText(this, "Tekst został zapisany w pliku", Toast.LENGTH_SHORT).show();
+
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Błąd zapisu do pliku", Toast.LENGTH_SHORT).show();

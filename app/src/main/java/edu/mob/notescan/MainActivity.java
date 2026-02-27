@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         if (isNetworkAvailable()) {
             statusText.setText("Jesteś online");
             statusText.setTextColor(getResources().getColor(R.color.colorOnline));
+
         } else {
             statusText.setText("Brak połączenia z internetem");
             statusText.setTextColor(getResources().getColor(R.color.colorOffline));
@@ -94,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                     intent.setData(Uri.parse("package:" + getPackageName()));
                     startActivityForResult(intent, GALLERY_REQUEST_CODE);
+
                 } else {
                     openGallery();
                 }
@@ -101,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                         == PackageManager.PERMISSION_GRANTED) {
                     openGallery();
+
                 } else {
                     // Jeśli nie mamy uprawnień prosimy o nie
                     ActivityCompat.requestPermissions(this,
@@ -125,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == GALLERY_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Uprawnienia do galerii przyznane.", Toast.LENGTH_SHORT).show();
@@ -189,10 +193,10 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == GALLERY_REQUEST_CODE) {
                 Uri selectedImageUri = data.getData();
+
                 if (selectedImageUri != null) {
                     try {
                         Bitmap imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
-
                         // Zapis bitmapy do pliku
                         File cacheDir = getCacheDir();
                         File file = new File(cacheDir, "temp_image.jpg");
@@ -200,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
                         imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
                         fos.close();
                         openCameraActivity2(file.getAbsolutePath());
+
                     } catch (IOException e) {
                         Toast.makeText(this, "Błąd ładowania obrazu", Toast.LENGTH_SHORT).show();
                     }
@@ -213,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
         if (connectivityManager != null) {
             NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
             return networkInfo != null && networkInfo.isConnected();
