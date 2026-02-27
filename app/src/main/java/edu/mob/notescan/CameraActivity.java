@@ -32,7 +32,6 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.core.MatOfFloat;
 
 
-
 public class CameraActivity extends AppCompatActivity {
 
     Button button_capture, button_copy;
@@ -62,24 +61,20 @@ public class CameraActivity extends AppCompatActivity {
             // jesli nie obraz sprawdz czy przesłan imagePath
             String imagePath = getIntent().getStringExtra("imagePath");
             if (imagePath != null) {
-                // ścieżka na Bitmape
                 Bitmap bitmapFromPath = BitmapFactory.decodeFile(imagePath);
+
                 if (bitmapFromPath != null) {
                     recognizeTextFromImage(bitmapFromPath);
                 } else {
                     Toast.makeText(this, "Nie udało się wczytać obrazu z podanej ścieżki.", Toast.LENGTH_SHORT).show();
                 }
             } else {
-                // Jeśli ani Bitmap, ani imagePath nie są dostępne, wyświetl błąd
                 Toast.makeText(this, "Nie przesłano obrazu do przetwarzania.", Toast.LENGTH_SHORT).show();
             }
         }
 
-
-
         // Przycisk powrotu do ekranu głównego
         buttonBack.setOnClickListener(v ->  finish());
-
 
         // Przycisk do skopipowania tekstu po zakończonej obróbce
         button_copy.setOnClickListener(v -> {
@@ -89,11 +84,11 @@ public class CameraActivity extends AppCompatActivity {
                 android.content.ClipData clip = android.content.ClipData.newPlainText("OCR Text", textToCopy);
                 clipboard.setPrimaryClip(clip);
                 Toast.makeText(this, "Skopiowano tekst do schowka", Toast.LENGTH_SHORT).show();
+
             } else {
                 Toast.makeText(this, "Brak tekstu do skopiowania", Toast.LENGTH_SHORT).show();
             }
         });
-
 
         // Przycisk do zapisu tekstu jak .txt w pamięci urządznia
         buttonSave.setOnClickListener(v -> {
@@ -105,7 +100,6 @@ public class CameraActivity extends AppCompatActivity {
                 Toast.makeText(this, "Brak tekstu do zapisania", Toast.LENGTH_SHORT).show();
             }
         });
-
 
         // Przycisk otwierający kamere
         button_capture.setOnClickListener(v -> {
@@ -223,6 +217,7 @@ public class CameraActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Błąd zapisu do pliku", Toast.LENGTH_SHORT).show();
+
         } finally {
             try {
                 if (writer != null) {
@@ -233,8 +228,6 @@ public class CameraActivity extends AppCompatActivity {
             }
         }
     }
-
-
 
 }
 
